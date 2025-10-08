@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: deploy-group    # optional: ensure only one action runs at a time
     steps:
+      - name: Write fly.toml from repository variable
+        run: echo "$FLY_TOML" > fly.toml
+        env:
+          FLY_TOML: ${{ vars.FLY_TOML }}
+          
       - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
