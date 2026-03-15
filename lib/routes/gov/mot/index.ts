@@ -1,27 +1,26 @@
-import { type Data, type DataItem, type Route, ViewType } from '@/types';
+import type { Cheerio, CheerioAPI } from 'cheerio';
+import { load } from 'cheerio';
+import type { Element } from 'domhandler';
+import type { Context } from 'hono';
 
+import type { Data, DataItem, Route } from '@/types';
+import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import ofetch from '@/utils/ofetch';
 import { parseDate } from '@/utils/parse-date';
-
-import { type CheerioAPI, type Cheerio, load } from 'cheerio';
-import type { Element } from 'domhandler';
-import { type Context } from 'hono';
 
 export const handler = async (ctx: Context): Promise<Data> => {
     const { category = 'jiaotongyaowen' } = ctx.req.param();
     const limit: number = Number.parseInt(ctx.req.query('limit') ?? '30', 10);
 
-    const baseUrl: string = 'https://www.mot.gov.cn';
+    const baseUrl = 'https://www.mot.gov.cn';
     const targetUrl: string = new URL(category.endsWith('/') ? category : `${category}/`, baseUrl).href;
 
     const response = await ofetch(targetUrl);
     const $: CheerioAPI = load(response);
     const language = $('html').attr('lang') ?? 'zh';
 
-    let items: DataItem[] = [];
-
-    items = $('div.tab-pane a')
+    let items: DataItem[] = $('div.tab-pane a')
         .slice(0, limit)
         .toArray()
         .map((el): Element => {
@@ -137,10 +136,9 @@ export const route: Route = {
             ],
         },
     },
-    description: `:::tip
+    description: `::: tip
 若订阅 [重要会议](https://www.mot.gov.cn/zhongyaohuiyi/)，网址为 \`https://www.mot.gov.cn/zhongyaohuiyi/\`，请截取 \`https://www.mot.gov.cn/\` 到末尾 \`/\` 的部分 \`zhongyaohuiyi\` 作为 \`category\` 参数填入，此时目标路由为 [\`/gov/mot/zhongyaohuiyi\`](https://rsshub.app/gov/mot/zhongyaohuiyi)。
-:::
-`,
+:::`,
     categories: ['government'],
     features: {
         requireConfig: false,
